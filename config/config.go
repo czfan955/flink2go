@@ -19,11 +19,12 @@ type Config struct {
 
 // KafkaConfig Kafka 配置
 type KafkaConfig struct {
-	Brokers       []string `yaml:"brokers"`
-	Topic         string   `yaml:"topic"`
-	GroupID       string   `yaml:"group_id"`
-	ConsumerCount int      `yaml:"consumer_count"`
-	ChannelSize   int      `yaml:"channel_size"`
+	Brokers        []string      `yaml:"brokers"`
+	Topic          string        `yaml:"topic"`
+	GroupID        string        `yaml:"group_id"`
+	ConsumerCount  int           `yaml:"consumer_count"`
+	ChannelSize    int           `yaml:"channel_size"`
+	CommitInterval time.Duration `yaml:"commit_interval"` // 延迟提交时间
 }
 
 // MySQLConfig MySQL 配置
@@ -88,6 +89,9 @@ func setDefaults(cfg *Config) {
 	}
 	if cfg.Kafka.ChannelSize <= 0 {
 		cfg.Kafka.ChannelSize = 10000
+	}
+	if cfg.Kafka.CommitInterval <= 0 {
+		cfg.Kafka.CommitInterval = 2 * time.Minute // 默认 2 分钟延迟提交
 	}
 	if cfg.MySQL.RefreshInterval <= 0 {
 		cfg.MySQL.RefreshInterval = time.Minute

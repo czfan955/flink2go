@@ -6,6 +6,7 @@ kafka:
   group_id: "flink2go-consumer-group"
   consumer_count: 4          # 消费者协程数量
   channel_size: 10000        # 消息通道缓冲大小
+  commit_interval: 2m        # 延迟提交时间，确保数据写入 CK 后再提交 offset
 
 # MySQL 配置（元数据缓存，已弃用）
 # mysql:
@@ -18,7 +19,7 @@ redis:
   password: "czfredisDB!"
   db: 0
   hash_key: "ad_map"          # Redis Hash 键名
-  refresh_cron: "0 */1 * * * *"  # cron 表达式：每分钟执行
+  refresh_cron: "0 */5 * * * *"  # cron 表达式：每分钟执行
 
 # ClickHouse 配置
 clickhouse:
@@ -36,5 +37,5 @@ aggregator:
 # 写入器配置
 writer:
   worker_count: 8            # 写入协程池大小
-  flush_cron: "0 */5 * * * *"   # cron 表达式：每 5 分钟执行 Flush
+  flush_cron: "0 */1 * * * *"   # cron 表达式：每 5 分钟执行 Flush
   batch_size: 10000          # 批量写入大小

@@ -23,12 +23,13 @@ type Consumer struct {
 // NewConsumer 创建 Kafka 消费者
 func NewConsumer(cfg *config.KafkaConfig, msgChan chan []byte) *Consumer {
 	reader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:  cfg.Brokers,
-		Topic:    cfg.Topic,
-		GroupID:  cfg.GroupID,
-		MinBytes: 10e3,  // 10KB
-		MaxBytes: 10e6,  // 10MB
-		MaxWait:  time.Second * 3, // 最多等待3秒
+		Brokers:        cfg.Brokers,
+		Topic:          cfg.Topic,
+		GroupID:        cfg.GroupID,
+		MinBytes:       10e3,  // 10KB
+		MaxBytes:       10e6,  // 10MB
+		MaxWait:        time.Second * 3,    // 最多等待3秒
+		CommitInterval: cfg.CommitInterval, // 延迟提交时间
 	})
 
 	return &Consumer{
