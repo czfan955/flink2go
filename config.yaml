@@ -1,0 +1,32 @@
+# Kafka 配置
+kafka:
+  brokers:
+    - "localhost:9092"
+  topic: "ad-events"
+  group_id: "flink2go-consumer-group"
+  consumer_count: 4          # 消费者协程数量
+  channel_size: 10000        # 消息通道缓冲大小
+
+# MySQL 配置（元数据缓存）
+mysql:
+  dsn: "user:password@tcp(localhost:3306)/ad_db?parseTime=true"
+  refresh_interval: 1m       # 刷新间隔
+
+# ClickHouse 配置
+clickhouse:
+  addr: "localhost:9000"
+  database: "ad_analytics"
+  table: "ad_aggregation"
+  username: "default"
+  password: ""
+
+# 聚合器配置
+aggregator:
+  bucket_count: 64           # 聚合桶数量
+  channel_size: 1000         # 每个桶的通道缓冲大小
+
+# 写入器配置
+writer:
+  worker_count: 8            # 写入协程池大小
+  flush_interval: 1m         # Flush 间隔
+  batch_size: 10000          # 批量写入大小
