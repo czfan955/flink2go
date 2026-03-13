@@ -94,7 +94,7 @@ func (w *Writer) writeBatch(ctx context.Context, table string, data map[models.G
 	if len(data) == 0 {
 		return nil
 	}
-
+	log.Printf("[Writer] 准备写入 %d 条记录到 %s", len(data), table)
 	// 创建批量插入
 	batch, err := w.conn.PrepareBatch(ctx, 
 		"INSERT INTO "+table+" (minute, brand, ad_type, ad_type_name, total_show, total_click, total_price, count)")

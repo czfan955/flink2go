@@ -84,6 +84,7 @@ func (h *Handler) Status(c *gin.Context) {
 func (h *Handler) GetConfig(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"kafka":       h.config.Kafka,
+		"redis":       h.config.Redis,
 		"mysql":       h.config.MySQL,
 		"clickhouse":  h.config.ClickHouse,
 		"aggregator":  h.config.Aggregator,

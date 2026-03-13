@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"sync"
+	"time"
 
 	"flink2go/config"
 
@@ -27,6 +28,7 @@ func NewConsumer(cfg *config.KafkaConfig, msgChan chan []byte) *Consumer {
 		GroupID:  cfg.GroupID,
 		MinBytes: 10e3,  // 10KB
 		MaxBytes: 10e6,  // 10MB
+		MaxWait:  time.Second * 3, // 最多等待3秒
 	})
 
 	return &Consumer{
@@ -66,6 +68,7 @@ func (c *Consumer) consume(ctx context.Context, workerID int) {
 			return
 		default:
 			msg, err := c.reader.ReadMessage(ctx)
+			log.Printf("[Consumer-%d] 读取消息: %s", workerID, string(msg.Value))
 			if err != nil {
 				if ctx.Err() != nil {
 					return

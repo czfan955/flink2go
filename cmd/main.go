@@ -18,7 +18,10 @@ import (
 	"flink2go/processor"
 	"flink2go/writer"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/robfig/cron/v3"
+
+	// MySQL 驱动（已注释）
+	// _ "github.com/go-sql-driver/mysql"
 )
 
 func main() {
@@ -33,14 +36,26 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// 1. 初始化 MySQL 元数据缓存
-	metadataCache, err := cache.NewMetadataCache(&cfg.MySQL)
+	// 创建 cron 调度器
+	cronScheduler := cron.New(cron.WithSeconds())
+
+	// 1. 初始化 Redis 元数据缓存
+	metadataCache, err := cache.NewMetadataCache(&cfg.Redis)
 	if err != nil {
 		log.Fatalf("初始化元数据缓存失败: %v", err)
 	}
 	metadataCache.Start()
 	defer metadataCache.Stop()
-	log.Println("元数据缓存初始化成功")
+	log.Println("Redis 元数据缓存初始化成功")
+
+	// MySQL 元数据缓存（已注释）
+	// metadataCache, err := cache.NewMetadataCache(&cfg.MySQL)
+	// if err != nil {
+	// 	log.Fatalf("初始化元数据缓存失败: %v", err)
+	// }
+	// metadataCache.Start()
+	// defer metadataCache.Stop()
+	// log.Println("MySQL 元数据缓存初始化成功")
 
 	// 2. 创建消息通道
 	msgChan := make(chan []byte, cfg.Kafka.ChannelSize)
@@ -84,8 +99,18 @@ func main() {
 	// 8. 启动消息处理协程
 	go processMessages(ctx, msgChan, msgProcessor, agg)
 
-	// 9. 启动定时 Flush 协程
-	go runFlushTimer(ctx, agg, cfg.Writer.FlushInterval)
+	// 9. 使用 cron 启动定时 Flush 任务
+	_, err = cronScheduler.AddFunc(cfg.Writer.FlushCron, func() {
+		agg.Flush()
+	})
+	if err != nil {
+		log.Fatalf("添加 Flush 定时任务失败: %v", err)
+	}
+	cronScheduler.Start()
+	log.Printf("Flush 定时任务已启动，cron: %s", cfg.Writer.FlushCron)
+
+	// runFlushTimer 协程方式（已注释，使用 cron 替代）
+	// go runFlushTimer(ctx, agg, cfg.Writer.FlushInterval)
 
 	// 10. 启动 Web 服务
 	handler := api.NewHandler(cfg, metadataCache, agg)
@@ -109,6 +134,9 @@ func main() {
 	<-sigCh
 
 	log.Println("收到退出信号，正在关闭服务...")
+
+	// 停止 cron 调度器
+	cronScheduler.Stop()
 
 	// 优雅关闭 Web 服务
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -136,17 +164,17 @@ func processMessages(ctx context.Context, msgChan <-chan []byte, proc *processor
 	}
 }
 
-// runFlushTimer 定时 Flush
-func runFlushTimer(ctx context.Context, agg *aggregator.Aggregator, interval time.Duration) {
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			agg.Flush()
-		}
-	}
-}
+// runFlushTimer 定时 Flush（已注释，使用 cron 替代）
+// func runFlushTimer(ctx context.Context, agg *aggregator.Aggregator, interval time.Duration) {
+// 	ticker := time.NewTicker(interval)
+// 	defer ticker.Stop()
+//
+// 	for {
+// 		select {
+// 		case <-ctx.Done():
+// 			return
+// 		case <-ticker.C:
+// 			agg.Flush()
+// 		}
+// 	}
+// }

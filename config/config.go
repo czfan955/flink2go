@@ -11,6 +11,7 @@ import (
 type Config struct {
 	Kafka      KafkaConfig      `yaml:"kafka"`
 	MySQL      MySQLConfig      `yaml:"mysql"`
+	Redis      RedisConfig      `yaml:"redis"`
 	ClickHouse ClickHouseConfig `yaml:"clickhouse"`
 	Aggregator AggregatorConfig `yaml:"aggregator"`
 	Writer     WriterConfig     `yaml:"writer"`
@@ -31,6 +32,15 @@ type MySQLConfig struct {
 	RefreshInterval time.Duration `yaml:"refresh_interval"`
 }
 
+// RedisConfig Redis 配置
+type RedisConfig struct {
+	Addr       string `yaml:"addr"`
+	Password   string `yaml:"password"`
+	DB         int    `yaml:"db"`
+	HashKey    string `yaml:"hash_key"`
+	RefreshCron string `yaml:"refresh_cron"` // cron 表达式，如 "0 */1 * * * *" 表示每分钟执行
+}
+
 // ClickHouseConfig ClickHouse 配置
 type ClickHouseConfig struct {
 	Addr     string `yaml:"addr"`
@@ -48,9 +58,9 @@ type AggregatorConfig struct {
 
 // WriterConfig 写入器配置
 type WriterConfig struct {
-	WorkerCount   int           `yaml:"worker_count"`
-	FlushInterval time.Duration `yaml:"flush_interval"`
-	BatchSize     int           `yaml:"batch_size"`
+	WorkerCount int    `yaml:"worker_count"`
+	FlushCron   string `yaml:"flush_cron"` // cron 表达式，如 "0 */1 * * * *" 表示每分钟执行
+	BatchSize   int    `yaml:"batch_size"`
 }
 
 // Load 从文件加载配置
@@ -82,6 +92,12 @@ func setDefaults(cfg *Config) {
 	if cfg.MySQL.RefreshInterval <= 0 {
 		cfg.MySQL.RefreshInterval = time.Minute
 	}
+	if cfg.Redis.RefreshCron == "" {
+		cfg.Redis.RefreshCron = "0 */1 * * * *" // 每分钟执行
+	}
+	if cfg.Redis.HashKey == "" {
+		cfg.Redis.HashKey = "ad_map"
+	}
 	if cfg.Aggregator.BucketCount <= 0 {
 		cfg.Aggregator.BucketCount = 64
 	}
@@ -91,8 +107,8 @@ func setDefaults(cfg *Config) {
 	if cfg.Writer.WorkerCount <= 0 {
 		cfg.Writer.WorkerCount = 8
 	}
-	if cfg.Writer.FlushInterval <= 0 {
-		cfg.Writer.FlushInterval = time.Minute
+	if cfg.Writer.FlushCron == "" {
+		cfg.Writer.FlushCron = "0 */1 * * * *" // 每分钟执行
 	}
 	if cfg.Writer.BatchSize <= 0 {
 		cfg.Writer.BatchSize = 10000
