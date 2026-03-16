@@ -146,6 +146,7 @@ func (c *MetadataCache) refresh() error {
 
 	newMap := make(map[int]string)
 	for field, value := range result {
+		// strconv.Atoi 是 Go 语言标准库 strconv 包中的一个函数，用于将字符串转换为整数（int 类型）。Atoi 是 "ASCII to Integer" 的缩写。
 		adType, err := strconv.Atoi(field)
 		if err != nil {
 			log.Printf("[MetadataCache] 跳过无效字段: %s", field)

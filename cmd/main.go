@@ -22,6 +22,13 @@ func main() {
 	}
 
 	// 创建上下文
+	/**
+	在 main 函数中创建一个 可取消的上下文 （Context），具体含义是：	
+	- context.Background() ：创建一个根上下文（根 Context），这是所有上下文的起点，通常用于整个应用的生命周期
+	- context.WithCancel() ：基于根上下文创建一个可取消的上下文，并返回两个值：
+  	- ctx ：新创建的可取消上下文对象
+  	- cancel ：一个函数，调用它可以取消这个上下文及其派生的所有上下文
+	**/
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 

@@ -73,15 +73,15 @@ func (w *Writer) Stop() {
 
 // worker 写入协程
 func (w *Writer) worker(ctx context.Context, id int, table string) {
-	defer w.wg.Done()
+	defer w.wg.Done()	// 协程结束时减少 WaitGroup 计数器
 
 	for {
 		select {
-		case <-w.stopCh:
+		case <-w.stopCh:	// 收到停止信号，退出
+			return	
+		case <-ctx.Done():	// 上下文被取消，退出
 			return
-		case <-ctx.Done():
-			return
-		case task := <-w.taskQueue:
+		case task := <-w.taskQueue:	// 从任务队列获取任务并执行写入
 			if err := w.writeBatch(ctx, table, task.Data); err != nil {
 				log.Printf("[Writer-%d] 写入失败: %v", id, err)
 			}
